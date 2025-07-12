@@ -1,12 +1,19 @@
 package cn.cokebook.lotus.core;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public interface Msg {
 
     String getContent();
 
-    int getRetries();
+    Integer getRetries();
 
     Long getTs();
+
 
     static Msg of(String content, long expireAtTs) {
         return of(content, expireAtTs, 0);
@@ -14,28 +21,18 @@ public interface Msg {
 
     static Msg of(String content, long expireAtTs, int retries) {
 
-        return new Msg() {
-            @Override
-            public String getContent() {
-                return content;
-            }
+        return new MsgImpl().setContent(content)
+                .setTs(expireAtTs)
+                .setRetries(retries);
 
-            @Override
-            public int getRetries() {
-                return retries;
-            }
+    }
 
-            @Override
-            public Long getTs() {
-                return expireAtTs;
-            }
-
-            @Override
-            public String toString() {
-                return String.format("{content = %s , retries = %d , ts  = %s}", content, retries, expireAtTs);
-            }
-        };
-
+    @Data
+    @Accessors(chain = true)
+    class MsgImpl implements Msg {
+        private String content;
+        private Long ts;
+        private Integer retries = 0;
     }
 
 }

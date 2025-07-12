@@ -6,7 +6,6 @@ import java.util.List;
 public interface DelayMsgQueue {
 
     Duration DEFAULT_LOCK_TIME = Duration.ofSeconds(5);
-    Integer MAX_FETCH_SIZE = 1000;
     Integer DEF_FETCH_SIZE = 10;
 
     void offer(String msg, long ts);

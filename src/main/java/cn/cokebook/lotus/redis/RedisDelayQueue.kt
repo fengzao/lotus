@@ -21,7 +21,7 @@ open class RedisDelayQueue(
     DelayMsgQueue {
 
     override fun offer(msg: String, ts: Long) {
-        val score = BigDecimal.valueOf(ts + 0.00).toString()
+        val score = ScoreUtils.score(ts, 0);
         redisTemplate.execute<Any>(
             DefaultRedisScript<Any>("redis.call('zadd', KEYS[1], ARGV[2], ARGV[1])", null),
             listOf<String>(name),
@@ -37,7 +37,7 @@ open class RedisDelayQueue(
                 name.toByteArray(StandardCharsets.UTF_8),
                 *msgList.flatMap {
                     listOf(
-                        it.ts.toString().toByteArray(StandardCharsets.UTF_8),
+                        ScoreUtils.score(it).toByteArray(StandardCharsets.UTF_8),
                         it.content.toByteArray(StandardCharsets.UTF_8)
                     )
                 }.toTypedArray()
@@ -50,7 +50,7 @@ open class RedisDelayQueue(
     override fun poll(size: Int, lockTime: Duration?): List<Msg> {
 
         val lockMs = (lockTime ?: DEFAULT_LOCK_TIME).toMillis()
-        val targetMaxSize = min(size, queueProperties.maxFetchSize)
+        val targetMaxSize = min(size, queueProperties.maxPollSize)
         val results = redisTemplate.execute(
             DefaultRedisScript(
                 """
@@ -61,11 +61,18 @@ open class RedisDelayQueue(
                         local params = {}
                         local size = ARGV[1]
                         local result =  redis.call('zrangebyscore', KEYS[1], '-inf' , nowMs, 'WITHSCORES', 'LIMIT' , 0 , size) 
+                        local epsilon = 1e-6
                         for i = 1, #result,  2 do 
                             local member = result[i] 
                             local score =  result[i+1] 
                             local ip, fp = math.modf(score) 
-                            local nextScore = nextMs + fp + 0.01 
+                            local nextScore = nextMs 
+                            local nextFp = fp + 0.01
+                            if math.abs(nextFp - 1) < epsilon then
+                                nextScore = nextScore + 0.00
+                            else 
+                                nextScore = nextScore + nextFp
+                            end
                             table.insert(params , nextScore)
                             table.insert(params , member)
                         end 
@@ -86,8 +93,9 @@ open class RedisDelayQueue(
         while (i < results.size) {
             val member = results[i] as String
             val score = results[i + 1] as String
-            val bigDecimal = BigDecimal(score).setScale(2, RoundingMode.HALF_UP)
-            val retries = (bigDecimal.multiply(BigDecimal.valueOf(100)).toLong() % 100).toInt()
+            val bigDecimal = BigDecimal(score).setScale(ScoreUtils.DP, RoundingMode.HALF_UP)
+            val retries = (bigDecimal.multiply(BigDecimal.valueOf(ScoreUtils.POT.toLong()))
+                .toLong() % ScoreUtils.POT.toLong()).toInt()
             msgList.add(Msg.of(member, bigDecimal.toLong(), retries))
             i += 2
         }
@@ -107,7 +115,6 @@ open class RedisDelayQueue(
     }
 
     override fun ack(msg: MutableList<String>) {
-
         redisTemplate.execute { connection: RedisConnection ->
             connection.execute(
                 "ZREM",

@@ -61,8 +61,9 @@ public class RedisDelayQueueTest {
     public void test_poll() {
 //        test_batch_offer();
         RedisDelayQueue queue = (RedisDelayQueue) factory.get("demo");
+//        queue.offer("hello", System.currentTimeMillis());
         long st = System.currentTimeMillis();
-        List<Msg> msgList = queue.poll(100, Duration.ofSeconds(20));
+        List<Msg> msgList = queue.poll(10, Duration.ofSeconds(1));
         long et = System.currentTimeMillis();
         System.out.println("------------- ts = " + (et - st) + "ms" + "size = " + msgList.size());
         for (Msg msg : msgList) {
