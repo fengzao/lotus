@@ -1,6 +1,6 @@
 ### lotus
 
--  [英文](./README.md)  [中文](./README.CN.md)
+-  [English](./README.md)  [中文](./README.CN.md)
 
 > Redis-Based Delayed Message/Task Queue: Implemented with a Single SortedSet, Supporting ACK Mechanism for Reliable
 > Message Delivery
