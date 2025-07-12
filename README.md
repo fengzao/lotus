@@ -1,3 +1,10 @@
 ### lotus
 
-> 基于 Redis 的延迟消息/任务 队列
+> Redis-Based Delayed Message/Task Queue: Implemented with a Single SortedSet, Supporting ACK Mechanism for Reliable
+> Message Delivery
+
+### docs
+
+- example : cn.cokebook.lotus.redis.RedisDelayQueueTest
+
+- web api :  cn.cokebook.lotus.api.DelayQueueController

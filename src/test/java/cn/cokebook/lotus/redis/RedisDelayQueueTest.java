@@ -1,4 +1,4 @@
-package cn.cokebookdemo.dm.redis;
+package cn.cokebook.lotus.redis;
 
 import cn.cokebook.lotus.core.DelayMsgQueue;
 import cn.cokebook.lotus.core.Msg;
@@ -23,21 +23,21 @@ import java.util.List;
 })
 @ExtendWith(SpringExtension.class)
 @TestPropertySource("classpath:application.properties")
-public class RedisDelayQueueTest2 {
+public class RedisDelayQueueTest {
 
     @Autowired
     RedisMsgQueueFactory factory;
 
     @Test
     public void test_offer() {
-        DelayMsgQueue queue = factory.get("wuming-test");
+        DelayMsgQueue queue = factory.get("demo");
         queue.offer("hello world", 1000);
 
     }
 
     @Test
     public void test_batch_offer() {
-        DelayMsgQueue queue = factory.get("wuming-test");
+        DelayMsgQueue queue = factory.get("demo");
         List<Msg> msgList = new ArrayList<>();
         for (int i = 0; i < 2000; i++) {
             msgList.add(Msg.of("id:" + i, System.currentTimeMillis()));
@@ -52,7 +52,7 @@ public class RedisDelayQueueTest2 {
 
     @Test
     public void test_ack() {
-        DelayMsgQueue queue = factory.get("wuming-test");
+        DelayMsgQueue queue = factory.get("demo");
         queue.ack("hello world");
     }
 
@@ -60,7 +60,7 @@ public class RedisDelayQueueTest2 {
     @Test
     public void test_poll() {
 //        test_batch_offer();
-        RedisDelayQueue queue = (RedisDelayQueue) factory.get("wuming-test");
+        RedisDelayQueue queue = (RedisDelayQueue) factory.get("demo");
         long st = System.currentTimeMillis();
         List<Msg> msgList = queue.poll(100, Duration.ofSeconds(20));
         long et = System.currentTimeMillis();
